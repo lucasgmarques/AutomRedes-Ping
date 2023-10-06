@@ -9,7 +9,7 @@ FORMATO_HORA = "%H:%M:%S"
 
 def execute_ping(url, count=2):
     # Executa o comando de ping e exibe a saída diretamente no console
-    ping_command = f"ping -n {count} {url}"
+    ping_command = f"ping -n {count} {url} > ping_log.txt"
     os.system(ping_command)
 
 def read_ping_result(log_file):
@@ -20,16 +20,16 @@ def read_ping_result(log_file):
 
 def extract_ip(result):
     # Extrai o IP da saída do comando ping
-    lines = result.splitlines()
     ip_address = ""
-
-    for line in lines:
-        if "Pingando" in line:
-            match = re.search(r'Pinging\s+(\d+\.\d+\.\d+\.\d+)', line)
+    
+    # Procura por linhas que contenham "Resposta de" e extrai o IP dessas linhas
+    for line in result.splitlines():
+        if "Disparando" in line:
+            match = re.search(r'\[(.*?)\]', line)
             if match:
                 ip_address = match.group(1)
                 break
-
+    print("ip address: ", ip_address)
     return ip_address
 
 def create_table(url, ip_address, time_avg):
@@ -53,6 +53,7 @@ def ping_url(url):
 
         # Lê o resultado do ping
         result = read_ping_result(log_file)
+        print(result)
 
         # Extrai o IP
         ip_address = extract_ip(result)
@@ -64,8 +65,7 @@ def ping_url(url):
                 time_avg = stats_data.group(1)
             else:
                 time_avg = "N/A"
-                
-            # Cria e exibe a tabela formatada
+            # Cria e exibe a tabela formatadas
             table = create_table(url, ip_address, time_avg)
             print(table)
         else:
@@ -86,13 +86,14 @@ def main():
             print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
-        execute_ping(url)
+        #execute_ping(url)
+        ping_url(url)
         option = input("Deseja continuar? [S]im [N]ao: ")
 
         if option.upper() == 'S':
             continue
         elif option.upper() == 'N':
-            print("Saindo ...")
+            print('#################### FIM DE PROGRAMA ####################')
             break
         else:
             print("Opção inválida. Tente novamente.")
