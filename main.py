@@ -8,35 +8,30 @@ FORMATO_DATA = "%d-%m-%Y"
 FORMATO_HORA = "%H:%M:%S"
 
 def execute_ping(url, count=2):
-    # Executa o comando de ping e exibe a saída diretamente no console
-    ping_command = f"ping -n {count} {url} > ping_log.txt"
+    ping_command = f"ping -c {count} {url} > ping_log.txt"
     os.system(ping_command)
 
 def read_ping_result(log_file):
-    # Lê o conteúdo do arquivo de log
     with open(log_file, "r") as file:
         result = file.read()
     return result
 
 def extract_ip(result):
-    # Extrai o IP da saída do comando ping
     ip_address = ""
     
-    # Procura por linhas que contenham "Resposta de" e extrai o IP dessas linhas
     for line in result.splitlines():
-        if "Disparando" in line:
-            match = re.search(r'\[(.*?)\]', line)
+        if "PING" in line:
+            match = re.search(r'\((.*?)\)', line)
             if match:
                 ip_address = match.group(1)
                 break
-    print("ip address: ", ip_address)
     return ip_address
 
 def create_table(url, ip_address, time_avg):
     # Obtém a data e hora atual
     current_time = datetime.datetime.now()
 
-    # Cria uma tabela PrettyTable para exibir os resultados
+    # Cria a tabela c/ PrettyTable
     table = PrettyTable()
     table.field_names = ["Data", "Horário", "URL", "IP", "Status", "TTL", "Time (média)", "Pacotes perdidos"]
     table.add_row([current_time.strftime(FORMATO_DATA), current_time.strftime(FORMATO_HORA), url, ip_address, "Online", "N/A", time_avg, "N/A"])
@@ -59,15 +54,15 @@ def ping_url(url):
         ip_address = extract_ip(result)
 
         if ip_address:
-            # Procura por "média" na saída do ping
-            stats_data = re.search(r'Average = (\d+)ms', result)
-            if stats_data:
-                time_avg = stats_data.group(1)
-            else:
-                time_avg = "N/A"
-            # Cria e exibe a tabela formatadas
-            table = create_table(url, ip_address, time_avg)
-            print(table)
+            for line in result.splitlines():
+                if "rtt min/avg/max/mdev" in line:
+                    stats_data = re.search(r'\/(\d+\.\d{3})\/', line)
+                    if stats_data:
+                        time_avg = stats_data.group(1)
+                    else:
+                        time_avg = "N/A"
+                    table = create_table(url, ip_address, time_avg)
+                    print(table)
         else:
             print("Não foi possível encontrar o IP na saída do ping.")
 
@@ -86,13 +81,13 @@ def main():
             print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
-        #execute_ping(url)
         ping_url(url)
+        
         option = input("Deseja continuar? [S]im [N]ao: ")
 
         if option.upper() == 'S':
             continue
-        elif option.upper() == 'N':
+        if option.upper() == 'N':
             print('#################### FIM DE PROGRAMA ####################')
             break
         else:
