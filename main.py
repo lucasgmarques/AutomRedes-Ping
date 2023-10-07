@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import datetime
 import re
@@ -6,9 +8,10 @@ from prettytable import PrettyTable
 # Formato da data e hora
 FORMATO_DATA = "%d-%m-%Y"
 FORMATO_HORA = "%H:%M:%S"
+LOG_TEMP_FILE = "log_temp.txt"
 
 def execute_ping(url, count=2):
-    ping_command = f"ping -c {count} {url} > ping_log.txt"
+    ping_command = f"ping -c {count} {url} > {LOG_TEMP_FILE}"
     os.system(ping_command)
 
 def read_ping_result(log_file):
@@ -51,7 +54,7 @@ def create_table(url, ip_address, time_avg):
                          ]
     table.add_row([current_time.strftime(FORMATO_DATA),
                    current_time.strftime(FORMATO_HORA),
-                   url, 
+                   url,
                    ip_address,
                    "Online", 
                    "N/A", 
@@ -60,16 +63,30 @@ def create_table(url, ip_address, time_avg):
 
     return table
 
+def create_log(table):
+    try:
+        current_time = datetime.datetime.now()
+
+        formatted_date = current_time.strftime(FORMATO_DATA)
+        formatted_time = current_time.strftime(FORMATO_HORA)
+
+        log_file_name = f"log_{formatted_date}_{formatted_time}.txt"
+        print(f'Salvando em {log_file_name}...')
+        with open(log_file_name, 'w', encoding='utf-8') as file:
+            file.write(str(table))
+    except Exception as e:
+        print(f"Ocorreu um erro: {e}")
+
 def ping_url(url):
     try:
         # Nome do arquivo de log
-        log_file = "ping_log.txt"
+        #log_file = "log_temp.txt"
 
         # Executa o comando de ping
         execute_ping(url)
 
         # Lê o resultado do ping
-        result = read_ping_result(log_file)
+        result = read_ping_result(LOG_TEMP_FILE)
         print(result)
 
         # Extrai o IP
@@ -78,15 +95,14 @@ def ping_url(url):
 
         if ip_address:
             table = create_table(url, ip_address, avg)
-            print(table)
-        else:
-            print("Não foi possível encontrar o IP na saída do ping.")
+            return table
+        print("Não foi possível encontrar o IP na saída do ping.")
 
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
     finally:
-        if os.path.exists(log_file):
-            os.remove(log_file)
+        if os.path.exists(LOG_TEMP_FILE):
+            os.remove(LOG_TEMP_FILE)
 
 def main():
     while True:
@@ -96,7 +112,8 @@ def main():
             print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
-        ping_url(url)
+        table = ping_url(url)
+        create_log(table)
         while True:
             option = input("Deseja continuar? [S]im [N]ao: ")
 
