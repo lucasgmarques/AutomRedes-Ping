@@ -79,17 +79,13 @@ def create_log(table):
 
 def ping_url(url):
     try:
-        # Nome do arquivo de log
-        #log_file = "log_temp.txt"
-
-        # Executa o comando de ping
         execute_ping(url)
 
         # Lê o resultado do ping
         result = read_ping_result(LOG_TEMP_FILE)
         print(result)
 
-        # Extrai o IP
+        # Extrai o IP e o avg time
         ip_address = extract_ip(result)
         avg = extract_avg_time(result)
 
@@ -112,8 +108,11 @@ def main():
             print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
-        table = ping_url(url)
-        create_log(table)
+        output = ping_url(url)
+        print(output)
+
+        # Cria o log file
+        create_log(output)
         while True:
             option = input("Deseja continuar? [S]im [N]ao: ")
 
