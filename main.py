@@ -1,33 +1,30 @@
 #!/usr/bin/env python
 
-import os
 import datetime
+import os
 import re
-import sys
 from prettytable import PrettyTable
 
 # Formato da data e hora
-FORMATO_DATA = "%d-%m-%Y"
-FORMATO_HORA = "%H-%M-%S"
+DATA_FORMAT = "%d-%m-%Y"
+TIME_FORMAT = "%H-%M-%S"
 
-# Definir o nome do arquivo de log temporário
+# Define o nome do arquivo de log temporário
 LOG_TEMP_FILE = "log_temp.txt"
 
-count_flag = "c"
-if sys.platform != 'linux':
-    count_flag = "n"
-
-
-def execute_ping(url, count_number=2):
+def execute_ping(url, count_number=2, count_flag='c'): # Trocar para 4
+    '''Executa o ping. Só funciona no Linux, por enquanto.'''
     ping_command = f"ping -{count_flag} {count_number} {url} > {LOG_TEMP_FILE}"
     os.system(ping_command)
 
 def read_ping_result(log_file):
+    '''Lê o arquivo de log temporário'''
     with open(log_file, "r", encoding='utf8') as file:
         result = file.read()
     return result
 
 def extract_ip(result):
+    '''Extrai o endereço IP'''
     ip_address = ""
     for line in result.splitlines():
         if "PING" in line:
@@ -38,16 +35,17 @@ def extract_ip(result):
     return ip_address
 
 def extract_avg_time(result):
+    '''Extrai o Tempo Médio(avg)'''
     for line in result.splitlines():
         if "rtt min/avg/max/mdev" in line:
-            stats_data = re.search(r'\/(\d+\.\d{3})\/', line)
-            if stats_data:
-                return stats_data.group(1)
+            match = re.search(r'\/(\d+\.\d{3})\/', line)
+            if match:
+                return match.group(1)
     return "N/A"
 
 def create_table(url, ip_address, time_avg):
+    '''Cria a tabela do log'''
     current_time = datetime.datetime.now()
-
     table = PrettyTable()
     table.field_names = [
                          "Data", 
@@ -59,8 +57,8 @@ def create_table(url, ip_address, time_avg):
                          "Time (média)", 
                          "Pacotes Perdidos",
                          ]
-    table.add_row([current_time.strftime(FORMATO_DATA),
-                   current_time.strftime(FORMATO_HORA),
+    table.add_row([current_time.strftime(DATA_FORMAT),
+                   current_time.strftime(TIME_FORMAT),
                    url,
                    ip_address,
                    "Online", 
@@ -71,11 +69,12 @@ def create_table(url, ip_address, time_avg):
     return table
 
 def create_log(table):
+    '''Cria o arquivo de log com a tabela'''
     try:
         current_time = datetime.datetime.now()
 
-        formatted_date = current_time.strftime(FORMATO_DATA)
-        formatted_time = current_time.strftime(FORMATO_HORA)
+        formatted_date = current_time.strftime(DATA_FORMAT)
+        formatted_time = current_time.strftime(TIME_FORMAT)
 
         log_file_name = f"log_{formatted_date}_{formatted_time}.txt"
         print(f'Salvando em {log_file_name}...')
@@ -85,6 +84,7 @@ def create_log(table):
         print(f"Ocorreu um erro: {e}")
 
 def ping_url(url):
+    '''Executa as principais funções'''
     try:
         execute_ping(url)
 
@@ -99,11 +99,12 @@ def ping_url(url):
         if ip_address:
             table = create_table(url, ip_address, avg)
             return table
-        print("Não foi possível encontrar o IP na saída do ping.")
+        return None
 
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
     finally:
+        # Remove o arquivo temporário
         if os.path.exists(LOG_TEMP_FILE):
             os.remove(LOG_TEMP_FILE)
 
@@ -116,10 +117,12 @@ def main():
             break
         print("-------------------------- PINGANDO -----------------------")
         output = ping_url(url)
-        print(output)
+        if output is None:
+            print("Não foi possível encontrar o IP na saída do ping.")
+        else:
+            print(output)
+            create_log(output)
 
-        # Cria o log file
-        create_log(output)
         while True:
             option = input("Deseja continuar? [S]im [N]ao: ")
 
