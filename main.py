@@ -3,6 +3,7 @@
 import os
 import datetime
 import re
+import sys
 from prettytable import PrettyTable
 
 # Formato da data e hora
@@ -10,8 +11,13 @@ FORMATO_DATA = "%d-%m-%Y"
 FORMATO_HORA = "%H:%M:%S"
 LOG_TEMP_FILE = "log_temp.txt"
 
-def execute_ping(url, count=2):
-    ping_command = f"ping -c {count} {url} > {LOG_TEMP_FILE}"
+count_flag = "c"
+if sys.platform == 'win32':
+    count_flag = "n"
+
+
+def execute_ping(url, count_number=2):
+    ping_command = f"ping -{count_flag} {count_number} {url} > {LOG_TEMP_FILE}"
     os.system(ping_command)
 
 def read_ping_result(log_file):
@@ -21,7 +27,6 @@ def read_ping_result(log_file):
 
 def extract_ip(result):
     ip_address = ""
-    
     for line in result.splitlines():
         if "PING" in line:
             match = re.search(r'\((.*?)\)', line)
@@ -124,4 +129,7 @@ def main():
             print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nVocê interrompeu usando o teclado!")
