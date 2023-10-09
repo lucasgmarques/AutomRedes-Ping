@@ -16,14 +16,16 @@ import re
 import platform
 from prettytable import PrettyTable
 
-# Formato da data e hora
+# Formato da data e hora do nome do log
 DATA_FORMAT = "%d-%m-%Y"
 TIME_FORMAT = "%H-%M-%S"
-
+# Formato da data e hora da tabela
+TABLE_DATA_FORMAT = "%d/%m/%Y"
+TABLE_TIME_FORMAT = "%H:%M:%S"
 # Define o nome do arquivo de log temporário
 LOG_TEMP_FILE = "log_temp.txt"
 
-def execute_ping(url, count_number=2): # Trocar para 4
+def execute_ping(url, count_number=2, timeout=None): # Trocar para 4
     '''Executa o ping'''
     system = platform.system()
     if system == 'Windows':
@@ -31,8 +33,38 @@ def execute_ping(url, count_number=2): # Trocar para 4
     else:
         count_flag = 'c'
 
-    ping_command = f"ping -{count_flag} {count_number} {url} > {LOG_TEMP_FILE}"
+    ping_command = f"ping -{count_flag} {count_number} -W {timeout} {url} > {LOG_TEMP_FILE}"
     os.system(ping_command)
+
+def check_status(result):
+    '''Verifica se o host está online'''
+    for line in result.splitlines():
+        if "packets transmitted" in line:
+            if "100% packet loss" in line:
+                return "Offline"
+            return "Online"
+    return "N/A"
+
+
+def extract_packet_loss(result):
+    '''Extrai o packet loss do output'''
+    for line in result.splitlines():
+        if "packet loss" in line:
+            match = re.search(r'(\d+)%', line)
+            if match:
+                return match.group(1)
+    return "N/A"
+
+
+def extract_ttl(result):
+    '''Extrai o TTL do output'''
+    for line in result.splitlines():
+        if "ttl=" in line:
+            match = re.search(r'ttl=(\d+)', line)
+            if match:
+                return match.group(1)
+    return "N/A"
+
 
 def read_ping_result(log_file):
     '''Lê o arquivo de log temporário'''
@@ -40,11 +72,13 @@ def read_ping_result(log_file):
         with open(log_file, "r", encoding='utf-8') as file:
             result = file.read()
         return result
+
     except OSError:
         return "Arquivo não encontrado."
 
+
 def extract_ip(result):
-    '''Extrai o endereço IP'''
+    '''Extrai o endereço IP do output'''
     ip_address = ""
     for line in result.splitlines():
         if "PING" in line:
@@ -54,8 +88,9 @@ def extract_ip(result):
                 break
     return ip_address
 
+
 def extract_avg_time(result):
-    '''Extrai o Tempo Médio(avg)'''
+    '''Extrai o Tempo Médio(avg) do output'''
     for line in result.splitlines():
         if "rtt min/avg/max/mdev" in line:
             match = re.search(r'\/(\d+\.\d{3})\/', line)
@@ -63,7 +98,8 @@ def extract_avg_time(result):
                 return match.group(1)
     return "N/A"
 
-def create_table(url, ip_address, time_avg):
+
+def create_table(url, ip_address, status, ttl, time_avg, packet_loss):
     '''Cria a tabela do log'''
     current_time = datetime.datetime.now()
     table = PrettyTable()
@@ -77,16 +113,16 @@ def create_table(url, ip_address, time_avg):
                          "Time (média)", 
                          "Pacotes Perdidos",
                          ]
-    table.add_row([current_time.strftime(DATA_FORMAT),
-                   current_time.strftime(TIME_FORMAT),
+    table.add_row([current_time.strftime(TABLE_DATA_FORMAT),
+                   current_time.strftime(TABLE_TIME_FORMAT),
                    url,
                    ip_address,
-                   "Online", 
-                   "N/A", 
+                   status,
+                   ttl,
                    time_avg,
-                   "N/A"])
-
+                   packet_loss + "%"])
     return table
+
 
 def create_log(table):
     '''Cria o arquivo de log com a tabela'''
@@ -100,24 +136,30 @@ def create_log(table):
         print(f'Salvando em {log_file_name}...')
         with open(log_file_name, 'w', encoding='utf-8') as file:
             file.write(str(table))
+
     except Exception as e:
         print(f"Ocorreu um erro: {e}")
+
 
 def ping_url(url):
     '''Executa as principais funções'''
     try:
-        execute_ping(url)
+        # Modificar o timeout se preciso
+        execute_ping(url, timeout=1)
 
         # Lê o resultado do ping
         result = read_ping_result(LOG_TEMP_FILE)
         print(result)
 
-        # Extrai o endereço IP e o Tempo Médio (avg time)
+        # Extrai as informações necessárias
         ip_address = extract_ip(result)
         avg = extract_avg_time(result)
+        status = check_status(result)
+        ttl = extract_ttl(result)
+        packet_loss = extract_packet_loss(result)
 
         if ip_address:
-            table = create_table(url, ip_address, avg)
+            table = create_table(url, ip_address, status, ttl, avg, packet_loss)
             return table
         return None
 
@@ -127,6 +169,7 @@ def ping_url(url):
         # Remove o arquivo temporário
         if os.path.exists(LOG_TEMP_FILE):
             os.remove(LOG_TEMP_FILE)
+
 
 def main():
     '''Função Principal'''
@@ -153,6 +196,7 @@ def main():
                 print('#################### FIM DE PROGRAMA ####################')
                 return
             print("Opção inválida. Tente novamente.")
+
 
 if __name__ == "__main__":
     try:
