@@ -1,8 +1,19 @@
 #!/usr/bin/env python
+'''
+Nome: Lucas Garcia Marques
+Disciplina: Automação e Programabilidade em Redes
+Professor(a): Eduarda Rodrigues Monteiro
 
+Programa que verifica se um determinado site está operacional usando a ferramenta Ping,
+imprimindo os resultados na tela do usuário e salvando em um arquivo de log. 
+O programa está funcionando, atualmente, somente em ambiente Linux, 
+porém deverá ser executado em Windows futuramente.
+
+'''
 import datetime
 import os
 import re
+import platform
 from prettytable import PrettyTable
 
 # Formato da data e hora
@@ -12,16 +23,25 @@ TIME_FORMAT = "%H-%M-%S"
 # Define o nome do arquivo de log temporário
 LOG_TEMP_FILE = "log_temp.txt"
 
-def execute_ping(url, count_number=2, count_flag='c'): # Trocar para 4
-    '''Executa o ping. Só funciona no Linux, por enquanto.'''
+def execute_ping(url, count_number=2): # Trocar para 4
+    '''Executa o ping'''
+    system = platform.system()
+    if system == 'Windows':
+        count_flag = 'n'
+    else:
+        count_flag = 'c'
+
     ping_command = f"ping -{count_flag} {count_number} {url} > {LOG_TEMP_FILE}"
     os.system(ping_command)
 
 def read_ping_result(log_file):
     '''Lê o arquivo de log temporário'''
-    with open(log_file, "r", encoding='utf8') as file:
-        result = file.read()
-    return result
+    try:
+        with open(log_file, "r", encoding='utf-8') as file:
+            result = file.read()
+        return result
+    except OSError:
+        return "Arquivo não encontrado."
 
 def extract_ip(result):
     '''Extrai o endereço IP'''
@@ -92,7 +112,7 @@ def ping_url(url):
         result = read_ping_result(LOG_TEMP_FILE)
         print(result)
 
-        # Extrai o IP e o avg time
+        # Extrai o endereço IP e o Tempo Médio (avg time)
         ip_address = extract_ip(result)
         avg = extract_avg_time(result)
 
@@ -109,6 +129,7 @@ def ping_url(url):
             os.remove(LOG_TEMP_FILE)
 
 def main():
+    '''Função Principal'''
     while True:
         print("-------------------------- Bem Vindo ----------------------")
         url = input("Digite uma URL (ou 'q' para sair): ")
