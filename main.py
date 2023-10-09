@@ -26,44 +26,64 @@ TABLE_TIME_FORMAT = "%H:%M:%S"
 LOG_TEMP_FILE = "log_temp.txt"
 
 def execute_ping(url, count_number=2, timeout=None): # Trocar para 4
-    '''Executa o ping'''
-    system = platform.system()
-    if system == 'Windows':
-        count_flag = 'n'
-    else:
-        count_flag = 'c'
+    '''Executa a ferramenta ping. '''
+    try:
+        system = platform.system()
+        if system == 'Windows':
+            count_flag = 'n'
+        else:
+            count_flag = 'c'
 
-    ping_command = f"ping -{count_flag} {count_number} -W {timeout} {url} > {LOG_TEMP_FILE}"
-    os.system(ping_command)
+        ping_command = f"ping -{count_flag} {count_number} -W {timeout} {url} > {LOG_TEMP_FILE}"
+        os.system(ping_command)
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
+
 
 def check_status(result):
-    '''Verifica se o host está online'''
-    for line in result.splitlines():
-        if "packets transmitted" in line:
-            if "100% packet loss" in line:
-                return "Offline"
-            return "Online"
-    return "N/A"
+    '''Verifica se o host está online.
+
+    Returns:
+        Online(str): != 100% de packet loss
+        Offline(str): == 100% de packet loss
+        N/A: Valor padrão
+
+    '''
+    try:
+        for line in result.splitlines():
+            if "packets transmitted" in line:
+                if "100% packet loss" in line:
+                    return "Offline"
+                return "Online"
+        return "N/A"
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 
 def extract_packet_loss(result):
     '''Extrai o packet loss do output'''
-    for line in result.splitlines():
-        if "packet loss" in line:
-            match = re.search(r'(\d+)%', line)
-            if match:
-                return match.group(1)
-    return "N/A"
+    try:
+        for line in result.splitlines():
+            if "packet loss" in line:
+                match = re.search(r'(\d+)%', line)
+                if match:
+                    return match.group(1)
+        return "N/A"
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 
 def extract_ttl(result):
     '''Extrai o TTL do output'''
-    for line in result.splitlines():
-        if "ttl=" in line:
-            match = re.search(r'ttl=(\d+)', line)
-            if match:
-                return match.group(1)
-    return "N/A"
+    try:
+        for line in result.splitlines():
+            if "ttl=" in line:
+                match = re.search(r'ttl=(\d+)', line)
+                if match:
+                    return match.group(1)
+        return "N/A"
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 
 def read_ping_result(log_file):
@@ -72,56 +92,63 @@ def read_ping_result(log_file):
         with open(log_file, "r", encoding='utf-8') as file:
             result = file.read()
         return result
-
     except OSError:
         return "Arquivo não encontrado."
 
 
 def extract_ip(result):
     '''Extrai o endereço IP do output'''
-    ip_address = ""
-    for line in result.splitlines():
-        if "PING" in line:
-            match = re.search(r'\((.*?)\)', line)
-            if match:
-                ip_address = match.group(1)
-                break
-    return ip_address
-
+    try:
+        ip_address = ""
+        for line in result.splitlines():
+            if "PING" in line:
+                match = re.search(r'\((.*?)\)', line)
+                if match:
+                    ip_address = match.group(1)
+                    break
+        return ip_address
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
+        
 
 def extract_avg_time(result):
     '''Extrai o Tempo Médio(avg) do output'''
-    for line in result.splitlines():
-        if "rtt min/avg/max/mdev" in line:
-            match = re.search(r'\/(\d+\.\d{3})\/', line)
-            if match:
-                return match.group(1)
-    return "N/A"
-
+    try:
+        for line in result.splitlines():
+            if "rtt min/avg/max/mdev" in line:
+                match = re.search(r'\/(\d+\.\d{3})\/', line)
+                if match:
+                    return match.group(1)
+        return "N/A"
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 def create_table(url, ip_address, status, ttl, time_avg, packet_loss):
     '''Cria a tabela do log'''
-    current_time = datetime.datetime.now()
-    table = PrettyTable()
-    table.field_names = [
-                         "Data", 
-                         "Horário", 
-                         "URL", 
-                         "IP", 
-                         "Status", 
-                         "TTL", 
-                         "Time (média)", 
-                         "Pacotes Perdidos",
-                         ]
-    table.add_row([current_time.strftime(TABLE_DATA_FORMAT),
-                   current_time.strftime(TABLE_TIME_FORMAT),
-                   url,
-                   ip_address,
-                   status,
-                   ttl,
-                   time_avg,
-                   packet_loss + "%"])
-    return table
+    try:
+        current_time = datetime.datetime.now()
+        table = PrettyTable()
+        table.field_names = [
+                             "Data", 
+                             "Horário", 
+                             "URL", 
+                             "IP", 
+                             "Status", 
+                             "TTL", 
+                             "Time (média)", 
+                             "Pacotes Perdidos",
+                             ]
+        table.add_row([current_time.strftime(TABLE_DATA_FORMAT),
+                       current_time.strftime(TABLE_TIME_FORMAT),
+                       url,
+                       ip_address,
+                       status,
+                       ttl,
+                       time_avg,
+                       packet_loss + "%"])
+        return table
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 
 def create_log(table):
@@ -137,12 +164,12 @@ def create_log(table):
         with open(log_file_name, 'w', encoding='utf-8') as file:
             file.write(str(table))
 
-    except Exception as e:
-        print(f"Ocorreu um erro: {e}")
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
 
 
 def ping_url(url):
-    '''Executa as principais funções'''
+    '''Executa as principais funções do ping e cria uma tabela com os resultados.'''
     try:
         # Modificar o timeout se preciso
         execute_ping(url, timeout=1)
@@ -162,9 +189,8 @@ def ping_url(url):
             table = create_table(url, ip_address, status, ttl, avg, packet_loss)
             return table
         return None
-
-    except Exception as e:
-        print(f"Ocorreu um erro: {e}")
+    except Exception as error:
+        print(f"Ocorreu um erro: {error}")
     finally:
         # Remove o arquivo temporário
         if os.path.exists(LOG_TEMP_FILE):
@@ -177,7 +203,8 @@ def main():
         print("-------------------------- Bem Vindo ----------------------")
         url = input("Digite uma URL (ou 'q' para sair): ")
         if url.lower() == 'q':
-            print("Saindo ...")
+            #print("Saindo ...")
+            print('#################### FIM DE PROGRAMA ####################')
             break
         print("-------------------------- PINGANDO -----------------------")
         output = ping_url(url)
