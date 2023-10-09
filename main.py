@@ -8,11 +8,13 @@ from prettytable import PrettyTable
 
 # Formato da data e hora
 FORMATO_DATA = "%d-%m-%Y"
-FORMATO_HORA = "%H:%M:%S"
+FORMATO_HORA = "%H-%M-%S"
+
+# Definir o nome do arquivo de log temporário
 LOG_TEMP_FILE = "log_temp.txt"
 
 count_flag = "c"
-if sys.platform == 'win32':
+if sys.platform != 'linux':
     count_flag = "n"
 
 
