@@ -13,6 +13,7 @@ porém deverá ser executado em Windows futuramente.
 import datetime
 import os
 import re
+import sys
 import platform
 from prettytable import PrettyTable
 
@@ -203,8 +204,7 @@ def main():
         print("-------------------------- Bem Vindo ----------------------")
         url = input("Digite uma URL (ou 'q' para sair): ")
         if url.lower() == 'q':
-            #print("Saindo ...")
-            print('#################### FIM DE PROGRAMA ####################')
+            print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
         output = ping_url(url)
@@ -214,16 +214,17 @@ def main():
             print(output)
             create_log(output)
 
-        while True:
-            option = input("Deseja continuar? [S]im [N]ao: ")
+        option = input("Deseja continuar? [S]im [N]ao: ").upper()
 
-            if option.upper() == 'S':
-                break
-            if option.upper() == 'N':
-                print('#################### FIM DE PROGRAMA ####################')
-                return
-            print("Opção inválida. Tente novamente.")
+        if option == 'N':
+            print('#################### FIM DE PROGRAMA ####################')
+            break
 
+        if option == 'S':
+            continue
+        
+        print("Opção inválida. Encerrando o programa.")
+        sys.exit()
 
 if __name__ == "__main__":
     try:
