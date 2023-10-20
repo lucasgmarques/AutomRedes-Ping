@@ -2,22 +2,15 @@
 
 import os
 import re
-import platform
 import my_log
 
 # Define o nome do arquivo de log temporário
 LOG_TEMP_FILE = "log_temp.txt"
 
-def execute_ping(url, count_number=2, timeout=None): # Trocar para 4
+def execute_ping(url, count_number=4, timeout=None):
     '''Executa a ferramenta ping. '''
     try:
-        system = platform.system()
-        if system == 'Windows':
-            count_flag = 'n'
-        else:
-            count_flag = 'c'
-
-        ping_command = f"ping -{count_flag} {count_number} -W {timeout} {url} > {LOG_TEMP_FILE}"
+        ping_command = f"ping -c {count_number} -W {timeout} {url} > {LOG_TEMP_FILE}"
         os.system(ping_command)
     except Exception as error:
         print(f"Ocorreu um erro: {error}")
@@ -78,8 +71,8 @@ def extract_ip(result):
         return ip_address
     except Exception as error:
         print(f"Ocorreu um erro: {error}")
-        
 
+        
 def extract_avg_time(result):
     '''Extrai o Tempo Médio(avg) do output'''
     try:
@@ -92,6 +85,7 @@ def extract_avg_time(result):
     except Exception as error:
         print(f"Ocorreu um erro: {error}")
 
+
 def read_ping_result(log_file):
     '''Lê o arquivo de log temporário'''
     try:
@@ -100,6 +94,7 @@ def read_ping_result(log_file):
         return result
     except OSError:
         return "Arquivo não encontrado."
+
 
 def ping_url(url):
     '''Executa as principais funções do ping e cria uma tabela com os resultados.'''
@@ -128,5 +123,3 @@ def ping_url(url):
         # Remove o arquivo temporário
         if os.path.exists(LOG_TEMP_FILE):
             os.remove(LOG_TEMP_FILE)
-
-
