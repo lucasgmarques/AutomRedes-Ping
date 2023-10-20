@@ -29,7 +29,7 @@ def check_status(result):
         print(f"Ocorreu um erro: {error}")
 
 
-def extract_info(result, pattern):
+def get_info(result, pattern):
     '''Extrair as informações baseado nas expressões regulares'''
     try:
         for line in result.splitlines():
@@ -41,17 +41,17 @@ def extract_info(result, pattern):
         print(f"Ocorreu um erro: {error}")
 
 
-def extract_packet_loss(result):
+def get_packet_loss(result):
     '''Extrai o packet loss do resultado'''
-    return extract_info(result, r'(\d+)%')
+    return get_info(result, r'(\d+)%')
 
 
-def extract_ttl(result):
+def get_ttl(result):
     '''Extrai o TTL do output'''
-    return extract_info(result, r'ttl=(\d+)')
+    return get_info(result, r'ttl=(\d+)')
 
 
-def extract_ip(result):
+def get_ip(result):
     '''Extrai o endereço IP do resultado'''
     try:
         ip_address = ""
@@ -66,7 +66,7 @@ def extract_ip(result):
         print(f"Ocorreu um erro: {error}")
 
         
-def extract_avg_time(result):
+def get_avg_time(result):
     '''Extrai o Tempo Médio(avg) do resultado'''
     try:
         for line in result.splitlines():
@@ -100,11 +100,11 @@ def ping_url(url):
         print(result)
 
         # Extrai as informações necessárias
-        ip_address = extract_ip(result)
-        avg = extract_avg_time(result)
+        ip_address = get_ip(result)
+        avg = get_avg_time(result)
         status = check_status(result)
-        ttl = extract_ttl(result)
-        packet_loss = extract_packet_loss(result)
+        ttl = get_ttl(result)
+        packet_loss = get_packet_loss(result)
 
         if ip_address:
             table = my_log.create_table(url, ip_address, status, ttl, avg, packet_loss)
