@@ -31,7 +31,7 @@ def create_table(url, ip_address, status, ttl, time_avg, packet_loss):
                        ip_address,
                        status,
                        ttl,
-                       time_avg,
+                       time_avg + " ms",
                        packet_loss + "%"])
         return table
     except Exception as error:
