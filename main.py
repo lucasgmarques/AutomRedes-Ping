@@ -27,7 +27,6 @@ def main():
 
         if option == 'S':
             continue
-        
         print("Opção inválida. Encerrando o programa.")
         sys.exit()
 

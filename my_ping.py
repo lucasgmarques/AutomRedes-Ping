@@ -17,14 +17,7 @@ def execute_ping(url, count_number=4, timeout=None):
 
 
 def check_status(result):
-    '''Verifica se o host está online.
-
-    Returns:
-        Online(str): != 100% de packet loss
-        Offline(str): == 100% de packet loss
-        N/A: Valor padrão
-
-    '''
+    '''Verifica se o host está online. '''
     try:
         for line in result.splitlines():
             if "packets transmitted" in line:
@@ -49,7 +42,7 @@ def extract_info(result, pattern):
 
 
 def extract_packet_loss(result):
-    '''Extrai o packet loss do output'''
+    '''Extrai o packet loss do resultado'''
     return extract_info(result, r'(\d+)%')
 
 
@@ -59,7 +52,7 @@ def extract_ttl(result):
 
 
 def extract_ip(result):
-    '''Extrai o endereço IP do output'''
+    '''Extrai o endereço IP do resultado'''
     try:
         ip_address = ""
         for line in result.splitlines():
@@ -74,7 +67,7 @@ def extract_ip(result):
 
         
 def extract_avg_time(result):
-    '''Extrai o Tempo Médio(avg) do output'''
+    '''Extrai o Tempo Médio(avg) do resultado'''
     try:
         for line in result.splitlines():
             if "rtt min/avg/max/mdev" in line:
@@ -120,6 +113,5 @@ def ping_url(url):
     except Exception as error:
         print(f"Ocorreu um erro: {error}")
     finally:
-        # Remove o arquivo temporário
         if os.path.exists(LOG_TEMP_FILE):
             os.remove(LOG_TEMP_FILE)
