@@ -1,7 +1,6 @@
-
 import sys
-import my_ping
-import my_log
+from my_ping import ping_url
+from my_log import create_log
 
 def menu():
     while True:
@@ -11,12 +10,12 @@ def menu():
             print("Saindo ...")
             break
         print("-------------------------- PINGANDO -----------------------")
-        output = my_ping.ping_url(url)
+        output = ping_url(url)
         if output is None:
             print("Não foi possível encontrar o IP.")
         else:
             print(output)
-            my_log.create_log(output)
+            create_log(output)
 
         option = input("Deseja continuar? [S]im [N]ao: ").upper()
 

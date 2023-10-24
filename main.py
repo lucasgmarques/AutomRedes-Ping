@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import my_view
+from my_view import menu
 
 def main():
-    my_view.menu()
+    menu()
 
 if __name__ == "__main__":
     try:
